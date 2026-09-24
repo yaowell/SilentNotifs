@@ -1,31 +1,43 @@
-name: Build Tweaks
+name: Build SilentNotifs Debs (Roothide & Rootless)
 
 on:
   push:
-    branches: [ master, main ]
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: macos-13
+    runs-on: macos-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-      - uses: LocalPaste/setup-theos@main
+      - name: Install Dependencies
+        run: |
+          brew install ldid
 
-      - run: |
-          make clean
-          make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless
-          mkdir -p output
-          mv packages/*.deb output/com.dvntm.silentnotifs_0.0.3_rootless.deb
+      - name: Clone Roothide Theos and SDKs
+        run: |
+          git clone --recursive https://github.com/roothide/theos.git $HOME/theos
+          rm -rf $HOME/theos/sdks
+          git clone --depth=1 https://github.com/theos/sdks.git $HOME/theos/sdks
+          echo "THEOS=$HOME/theos" >> $GITHUB_ENV
 
-      - run: |
-          make clean
-          make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=roothide
-          mv packages/*.deb output/com.dvntm.silentnotifs_0.0.3_roothide.deb
+      - name: Build Roothide Package
+        run: |
+          make clean package THEOS_PACKAGE_SCHEME=roothide SYSROOT=$HOME/theos/sdks/iPhoneOS16.5.sdk FINALPACKAGE=1
 
-      - uses: actions/upload-artifact@v3
+      - name: Build Rootless Package
+        run: |
+          make clean package THEOS_PACKAGE_SCHEME=rootless SYSROOT=$HOME/theos/sdks/iPhoneOS16.5.sdk FINALPACKAGE=1
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
         with:
           name: SilentNotifs-Debs
-          path: output/*.deb
+          path: packages/*.deb
