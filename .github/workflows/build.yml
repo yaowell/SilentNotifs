@@ -1,0 +1,31 @@
+name: Build Tweaks
+
+on:
+  push:
+    branches: [ master, main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-13
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: LocalPaste/setup-theos@main
+
+      - run: |
+          make clean
+          make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless
+          mkdir -p output
+          mv packages/*.deb output/com.dvntm.silentnotifs_0.0.3_rootless.deb
+
+      - run: |
+          make clean
+          make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=roothide
+          mv packages/*.deb output/com.dvntm.silentnotifs_0.0.3_roothide.deb
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: SilentNotifs-Debs
+          path: output/*.deb
