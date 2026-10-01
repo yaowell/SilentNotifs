@@ -1,4 +1,4 @@
-name: Build SilentNotifs Debs (Roothide & Rootless)
+name: Build AlarmVibrate Deb (Roothide Only)
 
 on:
   push:
@@ -32,12 +32,8 @@ jobs:
         run: |
           make clean package THEOS_PACKAGE_SCHEME=roothide SYSROOT=$HOME/theos/sdks/iPhoneOS16.5.sdk FINALPACKAGE=1
 
-      - name: Build Rootless Package
-        run: |
-          make clean package THEOS_PACKAGE_SCHEME=rootless SYSROOT=$HOME/theos/sdks/iPhoneOS16.5.sdk FINALPACKAGE=1
-
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: SilentNotifs-Debs
+          name: AlarmVibrate-Roothide-Deb
           path: packages/*.deb
